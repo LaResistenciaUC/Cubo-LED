@@ -60,24 +60,22 @@ void frameWrite(byte frame[], long layerDelay)
   for(byte layer = 0; layer < 8; layer++)
   {
     byte lSelect = layOrder[layer];  //Selector de capa
-    PORTD = (PORTD & B11000111) | lSelect<<3;
+    PORTD = (PORTD & B11100011) | lSelect<<2;
     byte addr = 1;
     PORTD = (PORTD & B00011111);          //Selector de latch, se pone en 0 al inicio
-    for(int pointer = 0; pointer < 512; pointer++, addr++) //Selector de dato
+    for(int pointer = 0; pointer < 64; pointer++) //Selector de dato
     {
-      byte data = frame[pointer];
-      
-      PORTB = (PORTB & B11000000) | data & B00111111; //Carga data
-      PORTC = (PORTC & B11111100) | data>>6;          
-      delayMicroseconds(latchDelay);
-      PORTD = (PORTD & B00011111) | addr<<5;          //Preparamos el siguiente latch y cargamos el dato del actual
-      byte ender = data & B00111111 | data>>6;
       if(addr == 7)
       {
         addr = 0;
-        PORTD = (PORTD & B00011111); //cargamos
         delayMicroseconds(layerDelay);
       }
+      byte data = frame[pointer];
+      PORTB = (PORTB & B00000011) | (data<<2); //Carga data
+      PORTC = (PORTC & B11111100) | data>>6;   //Carga data         
+      delayMicroseconds(latchDelay);
+      PORTD = (PORTD & B00011111) | addr<<5; //Preparamos el siguiente latch y cargamos el dato del actual
+      addr++;
     }
   }
 }
