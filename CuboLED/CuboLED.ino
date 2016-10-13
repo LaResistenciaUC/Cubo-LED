@@ -2,6 +2,7 @@
 
 /* Cubo LED LR
  * 
+ * 
  * Cubo LED de 8x8x8 con memoria de 512kb incorporada
  * 
  * Un cuadro tiene 512 bits, o 64 bytes
@@ -124,6 +125,7 @@ void loop()
     /*
      * El gran dilema del modo "Stream", es si confiar en que el programa host mantenga un timing de fps correcto, o manejarlo directamente via hardware
      * Al manejarlo vía hardware, podrían haber discrepancias de timing, en particular porque 60 fps no divide exacto el segundo en partes enteras, haciendo complicado manejar via delays, incluso NOPs
+     * Provisionalmente se manejará en modo stream
      */
     if(Serial.available()>=63) //recibo cuadro
     {
