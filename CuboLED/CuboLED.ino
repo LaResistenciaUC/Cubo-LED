@@ -6,7 +6,7 @@
  * Cubo LED de 8x8x8 con memoria de 512kb incorporada
  * 
  * Un cuadro tiene 512 bits, o 64 bytes
- * v0.0
+ * v0.7
  * 
  * 
  * Conexiones
@@ -45,39 +45,36 @@ const byte latchOrder[] = {0,1,2,3,4,5,6,7};
 byte frameBuffer[8][64]; //[rows][cols]  . Llamado  x[col][row]
 byte bufferPointer;
 int fps = 60;
-unsigned long ifi = 0; //inter-frame interval
-
-void latchWrite(byte data, byte addr)
-{
-  PORTD = (PORTD & B00011111) | addr<<5;          //Selector de latch
-  PORTB = (PORTB & B11000000) | data & B00111111; //Tomo los bytes inferiores
-  PORTC = (PORTC & B11111100) | data>>6;          //Bytes superiores
-}
-
-void frameWrite(byte frame[], long layerDelay)
+unsigned long latchDelay = 250;
+void frameWrite(byte frame[], unsigned long layerDelay)
 {
   //Vamos pasando por capas
-  byte latchDelay = 1;
+  
   for(byte layer = 0; layer < 8; layer++)
   {
     byte lSelect = layOrder[layer];  //Selector de capa
-    PORTD = (PORTD & B11100011) | lSelect<<2;
+    PORTD = (PORTD & B11100011) | lSelect << 2;
+    Serial.println(lSelect,BIN);
+    Serial.println(lSelect << 2,BIN);
+    Serial.println(PORTD,BIN);
+    // B 8 7 6 5 4 3 2 1 0
     byte addr = 1;
     PORTD = (PORTD & B00011111);          //Selector de latch, se pone en 0 al inicio
-    for(int pointer = 0; pointer < 64; pointer++) //Selector de dato
+    for(int pointer = layer*8; pointer < 8*layer+8; pointer++) //Selector de dato
     {
       if(addr == 7)
       {
         addr = 0;
-        delayMicroseconds(layerDelay);
+        delayMicroseconds(latchDelay);
       }
       byte data = frame[pointer];
-      PORTB = (PORTB & B00000011) | (data<<2); //Carga data
-      PORTC = (PORTC & B11111100) | data>>6;   //Carga data         
+      PORTB = (PORTB & B11000000) | (data & B00111111); //Carga data
+      PORTC = (PORTC & B11111100) | ((data & B11000000)>>6);   //Carga data
       delayMicroseconds(latchDelay);
       PORTD = (PORTD & B00011111) | addr<<5; //Preparamos el siguiente latch y cargamos el dato del actual
       addr++;
     }
+    delayMicroseconds(layerDelay);
   }
 }
 
@@ -86,8 +83,7 @@ void setup()
 {
   pinMode(A2,OUTPUT);
   digitalWrite(A2,HIGH);
-  ifi = floor(1000000/fps); //Microsegundos entre cuadros
-  Serial.begin(115200);
+  Serial.begin(250000);
   Serial.println(F("START"));
   Serial.println(F("MODE?"));
   delay(1000);
@@ -118,8 +114,16 @@ void setup()
   Serial.println(F("READY"));
 }
 void loop() 
-{
-  byte frame[64];
+{                //linea 
+  byte frame[] = { 255, 0,0,0,0,0,0,0,
+                   255, 0,0,0,0,0,0,0,
+                   3, 0,0,0,0,0,0,0,
+                   3, 0,0,0,0,0,0,0,
+                   3, 0,0,0,0,0,0,0,
+                   3, 0,0,0,0,0,0,0,
+                   255, 0,0,0,0,0,0,0,
+                   255, 0,0,0,0,0,0,0};
+  unsigned long tprev = 0;
   while(mode==0)
   {
     /*
@@ -129,8 +133,10 @@ void loop()
      */
     if(Serial.available()>=63) //recibo cuadro
     {
+      Serial.print('k');
       Serial.readBytes(frame, 64);
     }
-    frameWrite(frame,12); //Escribo cuadro... Esta rutina los escribe lo mas rápido posible
+    
+    frameWrite(frame,250); //Escribo cuadro... Esta rutina los escribe lo mas rápido posible
   }
 }
