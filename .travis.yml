@@ -3,12 +3,10 @@ python:
     - "2.7"
 
 env:
-    - PLATFORMIO_CI_SRC=path/to/source/file.c
-    - PLATFORMIO_CI_SRC=path/to/source/file.ino
-    - PLATFORMIO_CI_SRC=path/to/source/directory
+    - PLATFORMIO_CI_SRC=examples/ftdi/USBFTDILoopback
 
 install:
     - python -c "$(curl -fsSL https://raw.githubusercontent.com/platformio/platformio/master/scripts/get-platformio.py)"
 
 script:
-    - platformio ci --board=nanoatmega168
+    - platformio ci --board=nanoatmega168 --board=uno --lib="."
