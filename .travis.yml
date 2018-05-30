@@ -11,4 +11,4 @@ install:
     - python -c "$(curl -fsSL https://raw.githubusercontent.com/platformio/platformio/master/scripts/get-platformio.py)"
 
 script:
-    - platformio ci --board=TYPE_1 --board=TYPE_2 --board=TYPE_N
+    - platformio ci --board=nanoatmega168
